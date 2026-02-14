@@ -1,51 +1,78 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { createLetterAction } from '@/app/lib/letter/actions'
-import Link from 'next/link'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createLetterAction } from "@/app/lib/letter/actions";
+import Link from "next/link";
 
-const ICONS = ['💕', '❤️', '💖', '💗', '💓', '💝', '💌', '💐', '🌹', '🌷', '🌺', '🌸', '⭐', '✨', '💫', '🎀']
+const ICONS = [
+  "💕",
+  "❤️",
+  "💖",
+  "💗",
+  "💓",
+  "💝",
+  "💌",
+  "💐",
+  "🌹",
+  "🌷",
+  "🌺",
+  "🌸",
+  "⭐",
+  "✨",
+  "🎀",
+];
 
 const PRESET_COLORS = {
   backgrounds: [
-    { name: 'Pink Blush', value: '#fff5f7' },
-    { name: 'Lavender', value: '#f3e8ff' },
-    { name: 'Peach', value: '#ffedd5' },
-    { name: 'Mint', value: '#d1fae5' },
-    { name: 'Sky', value: '#dbeafe' },
-    { name: 'Rose', value: '#ffe4e6' },
+    { name: "Pink Blush", value: "#fff5f7" },
+    { name: "Lavender", value: "#f3e8ff" },
+    { name: "Peach", value: "#ffedd5" },
+    { name: "Mint", value: "#d1fae5" },
+    { name: "Sky", value: "#dbeafe" },
+    { name: "Rose", value: "#ffe4e6" },
   ],
   text: [
-    { name: 'Dark Gray', value: '#1f2937' },
-    { name: 'Deep Rose', value: '#be123c' },
-    { name: 'Purple', value: '#7c3aed' },
-    { name: 'Emerald', value: '#059669' },
-    { name: 'Blue', value: '#2563eb' },
-    { name: 'Black', value: '#000000' },
+    { name: "Dark Gray", value: "#1f2937" },
+    { name: "Deep Rose", value: "#be123c" },
+    { name: "Purple", value: "#7c3aed" },
+    { name: "Emerald", value: "#059669" },
+    { name: "Blue", value: "#2563eb" },
+    { name: "Black", value: "#000000" },
   ],
-}
+};
 
 export default function LetterEditor() {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [backgroundColor, setBackgroundColor] = useState('#fff5f7')
-  const [textColor, setTextColor] = useState('#1f2937')
-  const [selectedIcon, setSelectedIcon] = useState('💕')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [backgroundColor, setBackgroundColor] = useState("#fff5f7");
+  const [textColor, setTextColor] = useState("#1f2937");
+  const [selectedIcon, setSelectedIcon] = useState("💕");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
-    const formData = new FormData()
-    formData.append('title', title)
-    formData.append('content', content)
-    formData.append('background_color', backgroundColor)
-    formData.append('text_color', textColor)
-    formData.append('icon', selectedIcon)
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
+    formData.append("background_color", backgroundColor);
+    formData.append("text_color", textColor);
+    formData.append("icon", selectedIcon);
+    const result = await createLetterAction(formData);
 
-    await createLetterAction(formData)
-  }
+    if (result?.error) {
+      setError(result.error);
+      setIsSubmitting(false);
+      return;
+    }
+
+    router.push("/dashboard");
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -61,36 +88,61 @@ export default function LetterEditor() {
           </Link>
         </div>
 
+        {/* Show error if any */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2 placeholder:text-gray-800">
-              Title (Optional)
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Title *
             </label>
             <input
               id="title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition placeholder:text-gray-300"
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition text-gray-900 placeholder:text-gray-500"
               placeholder="My Valentine's Letter"
             />
           </div>
 
           {/* Content */}
           <div>
-            <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="content"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Your Message *
             </label>
             <textarea
               id="content"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.length <= 500) {
+                  setContent(e.target.value);
+                }
+              }}
               required
               rows={8}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition resize-none placeholder:text-gray-300"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition resize-none text-gray-900 placeholder:text-gray-500"
               placeholder="Write your heartfelt message here..."
             />
+            <div className="flex justify-end mt-1">
+              <span
+                className={`text-xs ${content.length >= 450 ? "text-red-500" : "text-gray-400"}`}
+              >
+                {content.length}/500
+              </span>
+            </div>
           </div>
 
           {/* Icon Selector */}
@@ -98,7 +150,7 @@ export default function LetterEditor() {
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Pick a Sticker (shows on closed letter)
             </label>
-            <div className="grid grid-cols-8 gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
               {ICONS.map((icon) => (
                 <button
                   key={icon}
@@ -106,8 +158,8 @@ export default function LetterEditor() {
                   onClick={() => setSelectedIcon(icon)}
                   className={`text-3xl p-3 rounded-lg border-2 transition-all hover:scale-110 ${
                     selectedIcon === icon
-                      ? 'border-pink-500 bg-pink-50 scale-110'
-                      : 'border-gray-200 hover:border-pink-300'
+                      ? "border-pink-500 bg-pink-50 scale-110"
+                      : "border-gray-200 hover:border-pink-300"
                   }`}
                 >
                   {icon}
@@ -129,8 +181,8 @@ export default function LetterEditor() {
                   onClick={() => setBackgroundColor(color.value)}
                   className={`p-3 rounded-lg border-2 transition-all ${
                     backgroundColor === color.value
-                      ? 'border-pink-500 ring-2 ring-pink-200'
-                      : 'border-gray-200 hover:border-pink-300'
+                      ? "border-pink-500 ring-2 ring-pink-200"
+                      : "border-gray-200 hover:border-pink-300"
                   }`}
                   style={{ backgroundColor: color.value }}
                 >
@@ -155,8 +207,8 @@ export default function LetterEditor() {
                   onClick={() => setTextColor(color.value)}
                   className={`p-3 rounded-lg border-2 transition-all ${
                     textColor === color.value
-                      ? 'border-pink-500 ring-2 ring-pink-200'
-                      : 'border-gray-200 hover:border-pink-300'
+                      ? "border-pink-500 ring-2 ring-pink-200"
+                      : "border-gray-200 hover:border-pink-300"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -179,7 +231,7 @@ export default function LetterEditor() {
             disabled={isSubmitting || !content.trim()}
             className="w-full bg-pink-600 text-white py-4 rounded-lg font-medium hover:bg-pink-700 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Creating...' : '✨ Create Letter'}
+            {isSubmitting ? "Creating..." : " Create Letter"}
           </button>
         </form>
       </div>
@@ -188,18 +240,18 @@ export default function LetterEditor() {
       <div className="lg:sticky lg:top-8 h-fit">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Preview</h2>
-          
+
           {/* Closed State Preview */}
           <div className="mb-6">
-            <p className="text-sm text-gray-600 mb-3">Closed (what recipient sees first):</p>
+            <p className="text-sm text-gray-600 mb-3">
+              Closed (what recipient sees first):
+            </p>
             <div className="relative aspect-[3/4] max-w-xs mx-auto">
               <div
                 className="absolute inset-0 rounded-2xl shadow-2xl flex items-center justify-center"
                 style={{ backgroundColor: backgroundColor }}
               >
-                <div className="text-8xl animate-pulse">
-                  {selectedIcon}
-                </div>
+                <div className="text-8xl animate-pulse">{selectedIcon}</div>
               </div>
             </div>
           </div>
@@ -216,16 +268,16 @@ export default function LetterEditor() {
             >
               {title && (
                 <h3 className="text-2xl font-bold mb-4">
-                  {title || 'Your Title Here'}
+                  {title || "Your Title Here"}
                 </h3>
               )}
               <p className="whitespace-pre-wrap leading-relaxed">
-                {content || 'Your message will appear here...'}
+                {content || "Your message will appear here..."}
               </p>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
