@@ -21,7 +21,7 @@ export async function createLetterAction(formData: FormData) {
     })
 
     revalidatePath('/dashboard')
-    redirect(`/letter/${letter.id}`)
+    return { success: true, id: letter.id }  
   } catch (error) {
     console.error('Error creating letter:', error)
     return { error: 'Failed to create letter' }
