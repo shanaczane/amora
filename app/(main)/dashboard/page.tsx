@@ -15,6 +15,15 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  // Fetch username from profiles
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("user_id", user.id)
+    .single();
+
+  const username = profile?.username || user.email;
+
   const letters = await getUserLetters();
 
   return (
@@ -23,14 +32,16 @@ export default async function DashboardPage() {
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-pink-600">Amora</h1>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="text-gray-600 hover:text-gray-900 text-sm"
-            >
-              Sign Out
-            </button>
-          </form>
+          <div className="flex items-center gap-4">
+            <form action={signOut}>
+              <button
+                type="submit"
+                className="text-gray-600 hover:text-gray-900 text-sm"
+              >
+                Sign Out
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -39,7 +50,10 @@ export default async function DashboardPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-3xl font-bold text-gray-900">Your Letters</h2>
-            <p className="text-gray-600 mt-1">Welcome back, {user.email}! 💕</p>
+            <p className="text-gray-600 mt-1">
+              Welcome,{" "}
+              <span className="font-semibold text-pink-600">@{username}</span>
+            </p>
           </div>
           <Link
             href="/create"
@@ -57,7 +71,7 @@ export default async function DashboardPage() {
               No letters yet
             </h3>
             <p className="text-gray-600 mb-6">
-              Create your first letter and share it with someone special!
+              Create your first love letter and share it with someone special!
             </p>
             <Link
               href="/create"
