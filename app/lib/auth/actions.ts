@@ -23,6 +23,17 @@ export async function signUp(formData: FormData) {
     return { error: "username", message: "This username is already taken" };
   }
 
+  // Check if email already exists in profiles
+  const { data: existingEmail } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("email", email.trim())
+    .single();
+
+  if (existingEmail) {
+    return { error: "email", message: "This email is already registered" };
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -38,11 +49,12 @@ export async function signUp(formData: FormData) {
     return { error: "email", message: error.message };
   }
 
-  // Create profile with username
+  // Create profile with username AND email
   if (data.user) {
     const { error: profileError } = await supabase.from("profiles").insert({
       user_id: data.user.id,
       username: username.trim(),
+      email: email.trim().toLowerCase(),
     });
 
     if (profileError) {
@@ -60,32 +72,21 @@ export async function signIn(formData: FormData) {
 
   const supabase = await createServerSupabaseClient();
 
-  let email = emailOrUsername;
+  let email = emailOrUsername.trim();
 
-  // Check if input is a username (no @ symbol)
+  // If not an email, look up by username
   if (!emailOrUsername.includes("@")) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("user_id")
+      .select("email")
       .eq("username", emailOrUsername.trim())
       .single();
 
-    if (!profile) {
+    if (!profile?.email) {
       return { error: "email_or_username", message: "Username not found" };
     }
 
-    // Get email from auth
-    const {
-      data: { user },
-    } = (await supabase.auth.admin?.getUserById)
-      ? await supabase.auth.admin.getUserById(profile.user_id)
-      : { data: { user: null } };
-
-    if (!user?.email) {
-      return { error: "email_or_username", message: "Account not found" };
-    }
-
-    email = user.email;
+    email = profile.email; 
   }
 
   const { error } = await supabase.auth.signInWithPassword({
