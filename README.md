@@ -1,36 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+#  Amora - Valentine's Letter Builder
 
-## Getting Started
+Amora is a web app that lets you create customizable love letters and share them with someone special. Recipients can tap to open the letter with a smooth animation reveal.
 
-First, run the development server:
+##  Features
 
+-  **Authentication** - Sign up and log in with email or username
+-  **Create Letters** - Write heartfelt messages with custom colors, stickers, and backgrounds
+-  **Letter Preview** - See exactly how your letter looks before sending
+-  **Shareable Links** - Copy and share your letter with anyone
+-  **Opening Animation** - Recipients tap to reveal the letter with a smooth animation
+-  **Edit & Delete** - Update or remove your letters anytime
+-  **Responsive** - Works on mobile and desktop
+
+##  Tech Stack
+
+- **Framework** - Next.js 15 (App Router)
+- **Language** - TypeScript
+- **Styling** - Tailwind CSS
+- **Backend/Auth** - Supabase
+- **Deployment** - Vercel
+
+##  Getting Started
+
+### Prerequisites
+- Node.js 18+
+- A Supabase account
+- A Vercel account (for deployment)
+
+### Installation
+
+1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/shanaczane/amora.git
+cd amora
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables - create a `.env.local` file:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Set up the database - run these in your Supabase SQL Editor:
+```sql
+-- Letters table
+CREATE TABLE letters (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  background_color TEXT DEFAULT '#fff5f7',
+  text_color TEXT DEFAULT '#1f2937',
+  icon TEXT DEFAULT '💕',
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
 
-## Learn More
+-- Profiles table
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  username TEXT UNIQUE NOT NULL,
+  email TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+```
 
-To learn more about Next.js, take a look at the following resources:
+5. Run the development server
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) in your browser!
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+##  Project Structure
+```
+amora/
+├── app/
+│   ├── (auth)/
+│   │   ├── login/
+│   │   └── signup/
+│   ├── (main)/
+│   │   ├── dashboard/
+│   │   ├── create/
+│   │   └── edit/[id]/
+│   ├── api/letters/
+│   ├── auth/callback/
+│   └── letter/[id]/
+├── components/
+│   └── letter/
+│       ├── LetterAnimation.tsx
+│       ├── LetterEditor.tsx
+│       ├── LetterEditEditor.tsx
+│       └── ShareButton.tsx
+├── lib/
+│   ├── auth/actions.ts
+│   ├── letter/actions.ts
+│   ├── supabase/
+│   ├── db.ts
+│   ├── utils.ts
+│   └── validations.ts
+├── hooks/
+│   └── useLetters.ts
+└── types/
+    ├── letter.ts
+    └── user.ts
+```
 
-## Deploy on Vercel
+##  Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The app is deployed on Vercel. To deploy your own:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push code to GitHub
+2. Import project in [Vercel](https://vercel.com)
+3. Add environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SITE_URL` (your Vercel URL)
+4. Deploy!
+
+##  Live Demo
+
+[https://amora-orcin.vercel.app](https://amora-orcin.vercel.app)
+
+##  Author
+
+Made with <3 by Shana Czane Cruzat
